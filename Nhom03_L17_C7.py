@@ -2,7 +2,6 @@ import streamlit as st
 import time
 from gtts import gTTS
 import io
-import pygame # Thư viện mới để phát nhạc trực tiếp
 
 # ==========================================
 # 1. CẤU HÌNH TRANG WEB
@@ -89,26 +88,21 @@ if 'vip_streak' not in st.session_state:
     st.session_state.vip_streak = 0
 if 'last_ticket' not in st.session_state:
     st.session_state.last_ticket = None
+if 'audio_to_play' not in st.session_state:
+    st.session_state.audio_to_play = None
 
 # ==========================================
-# 4. HÀM ÂM THANH (DÙNG PYGAME PHÁT TRỰC TIẾP)
+# 4. HÀM ÂM THANH (SỬA LẠI CHO WEB)
 # ==========================================
 def speak(text):
     try:
-        # 1. Tạo file âm thanh ảo trong RAM (không cần lưu ra ổ cứng)
         tts = gTTS(text=text, lang='vi')
         sound_file = io.BytesIO()
         tts.write_to_fp(sound_file)
-        sound_file.seek(0)
-        
-        # 2. Dùng Pygame phát trực tiếp ra loa máy tính
-        pygame.mixer.init()
-        pygame.mixer.music.load(sound_file)
-        pygame.mixer.music.play()
-        
-        # Lưu ý: Không cần chờ nhạc chạy hết để tránh treo web
+        # Lưu vào session_state để phát ở phần giao diện
+        st.session_state.audio_to_play = sound_file.getvalue()
     except Exception as e:
-        st.toast(f"Lỗi loa: {e}", icon="⚠️")
+        st.toast(f"Lỗi tạo âm thanh: {e}", icon="⚠️")
 
 # ==========================================
 # 5. LOGIC XỬ LÝ
@@ -164,18 +158,20 @@ def auto_call_next():
     ticket = target_queue.pop(0)
     st.session_state.display[target_cat] = ticket
     
-    # Đọc loa
+    # Chuẩn bị câu đọc
     action = "lên" if target_cat == 'vip' else "đến"
-    
-    # Phát thông báo Toast trước
     st.toast(f"Đang gọi: {ticket['code']}", icon="🔊")
-    
-    # Phát âm thanh trực tiếp
     speak(f"Mời khách hàng {ticket['name']}, số vé {ticket['code']}, {action} {ticket['loc']}")
 
 # ==========================================
 # 6. GIAO DIỆN
 # ==========================================
+
+# Phát âm thanh nếu có trong hàng đợi (Sẽ hiện trình phát nhạc nhỏ)
+if st.session_state.audio_to_play:
+    st.audio(st.session_state.audio_to_play, format="audio/mp3", autoplay=True)
+    st.session_state.audio_to_play = None # Xóa sau khi phát xong
+
 st.markdown("""
 <div style="background: #004e92; color: white; padding: 10px; border-radius: 5px; margin-bottom: 20px;">
     <marquee direction="left">🎉 CHÀO MỪNG QUÝ KHÁCH! --- GIỜ LÀM VIỆC: 8:00 - 17:00 --- KÍNH CHÚC QUÝ KHÁCH NHIỀU SỨC KHỎE! 🎉</marquee>
@@ -210,7 +206,6 @@ st.write("---")
 # KHU VỰC ĐIỀU KHIỂN
 cc1, cc2 = st.columns([1, 2])
 with cc1:
-    # Nút bấm quan trọng
     st.button("🔔 GỌI KHÁCH TIẾP THEO", on_click=auto_call_next, type="primary", use_container_width=True)
 with cc2:
     s = st.session_state.vip_streak
@@ -229,7 +224,6 @@ with col_kiosk:
         st.number_input("Số Tiền (VNĐ)", min_value=0, step=10000000, key="amount_input", format="%d")
         st.button("🖨️ IN VÉ NGAY", on_click=process_ticket, use_container_width=True)
     
-    # --- PHẦN HIỂN THỊ VÉ ĐẦY ĐỦ THÔNG TIN ---
     if st.session_state.last_ticket:
         t = st.session_state.last_ticket
         st.markdown(f"""
