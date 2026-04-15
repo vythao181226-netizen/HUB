@@ -1,252 +1,84 @@
-{
-  "nbformat": 4,
-  "nbformat_minor": 0,
-  "metadata": {
-    "colab": {
-      "provenance": []
-    },
-    "kernelspec": {
-      "name": "python3",
-      "display_name": "Python 3"
-    },
-    "language_info": {
-      "name": "python"
+import streamlit as st
+import hashlib
+
+# --- CẤU HÌNH TRANG ---
+st.set_page_config(page_title="Core Banking System", page_icon="🏦")
+
+# --- HÀM BỔ TRỢ ---
+def hash_data(data):
+    """Băm dữ liệu bằng SHA-256 để bảo mật."""
+    return hashlib.sha256(str(data).encode()).hexdigest()
+
+# --- KHỞI TẠO DỮ LIỆU (Giả lập Database) ---
+# Sử dụng st.session_state để dữ liệu không bị mất khi giao diện load lại
+if 'transaction_db' not in st.session_state:
+    st.session_state.transaction_db = {
+        "GD001": "Chuyển tiền 5.000.000 VND",
+        "GD002": "Thanh toán tiền điện",
+        "GD003": "Rút tiền ATM"
     }
-  },
-  "cells": [
-    {
-      "cell_type": "code",
-      "source": [
-        "class SimpleHashTable:\n",
-        "    def __init__(self, size):\n",
-        "        self.size = size\n",
-        "        self.table = [None] * size\n",
-        "\n",
-        "    def hash_function(self, key):\n",
-        "        # Giả sử Key là Số tài khoản (Số nguyên)\n",
-        "        # Hàm băm trả về vị trí Index bằng phép chia lấy dư\n",
-        "        return key % self.size\n",
-        "\n",
-        "    def insert(self, key, value):\n",
-        "        index = self.hash_function(key)\n",
-        "        self.table[index] = value\n",
-        "        print(f\"Dữ liệu {value} được lưu tại Index: {index}\")\n",
-        "\n",
-        "# Khởi tạo bảng băm có 100 vị trí lưu trữ\n",
-        "bank_storage = SimpleHashTable(100)\n",
-        "bank_storage.insert(10925, \"Giao dịch 5.600.000 VND\") # Index 25"
-      ],
-      "metadata": {
-        "colab": {
-          "base_uri": "https://localhost:8080/"
-        },
-        "id": "IEbtTUIFUN77",
-        "outputId": "911ef05e-d773-4735-df15-ca5c22985a90"
-      },
-      "execution_count": 6,
-      "outputs": [
-        {
-          "output_type": "stream",
-          "name": "stdout",
-          "text": [
-            "Dữ liệu Giao dịch 5.600.000 VND được lưu tại Index: 25\n"
-          ]
-        }
-      ]
-    },
-    {
-      "cell_type": "code",
-      "source": [
-        "# Hash Table lưu dữ liệu giao dịch\n",
-        "transactions = {\n",
-        "    \"GD001\": \"Chuyển tiền 1.000.000đ\",\n",
-        "    \"GD002\": \"Thanh toán tiền điện\",\n",
-        "    \"GD003\": \"Rút tiền ATM\"\n",
-        "}\n",
-        "\n",
-        "# Tra cứu giao dịch theo mã\n",
-        "ma_gd = \"GD002\"\n",
-        "print(f\"Giao dịch {ma_gd}: {transactions.get(ma_gd, 'Không tìm thấy')}\")"
-      ],
-      "metadata": {
-        "colab": {
-          "base_uri": "https://localhost:8080/"
-        },
-        "id": "sDLxxLmdUSYT",
-        "outputId": "86989986-846d-42d4-96d2-8d82b6b2cc1b"
-      },
-      "execution_count": 8,
-      "outputs": [
-        {
-          "output_type": "stream",
-          "name": "stdout",
-          "text": [
-            "Giao dịch GD002: Thanh toán tiền điện\n"
-          ]
-        }
-      ]
-    },
-    {
-      "cell_type": "code",
-      "source": [
-        "import hashlib\n",
-        "\n",
-        "# Hash Table lưu trữ user (Giả lập Database)\n",
-        "users = {}\n",
-        "\n",
-        "def hash_password(password):\n",
-        "    return hashlib.sha256(password.encode()).hexdigest()\n",
-        "\n",
-        "# Lưu mật khẩu đã băm\n",
-        "users[\"user01\"] = hash_password(\"123456\")\n",
-        "\n",
-        "# Kiểm tra mật khẩu\n",
-        "print(users[\"user01\"] == hash_password(\"123456\"))"
-      ],
-      "metadata": {
-        "colab": {
-          "base_uri": "https://localhost:8080/"
-        },
-        "id": "bbfv78HfW19P",
-        "outputId": "e68af27d-e6d6-42ca-a8cc-3fe3f2b8445a"
-      },
-      "execution_count": 14,
-      "outputs": [
-        {
-          "output_type": "stream",
-          "name": "stdout",
-          "text": [
-            "True\n"
-          ]
-        }
-      ]
-    },
-    {
-      "cell_type": "code",
-      "source": [
-        "import hashlib\n",
-        "\n",
-        "# Hàm băm mã tài khoản\n",
-        "def hash_account(account_number):\n",
-        "    return hashlib.sha256(account_number.encode()).hexdigest()\n",
-        "\n",
-        "# Hệ thống sàng lọc giao dịch\n",
-        "def screening_system(transaction_account, blacklist):\n",
-        "    # Băm mã tài khoản\n",
-        "    hashed_account = hash_account(transaction_account)\n",
-        "\n",
-        "    # Tra cứu trong Hash Table\n",
-        "    if hashed_account in blacklist:\n",
-        "        return \"Giao dịch bị chặn\"\n",
-        "    else:\n",
-        "        return \"Giao dịch được duyệt\""
-      ],
-      "metadata": {
-        "id": "Ulh1UJP_YY85"
-      },
-      "execution_count": 19,
-      "outputs": []
-    },
-    {
-      "cell_type": "code",
-      "source": [
-        "blacklist = {\n",
-        "    hash_account(\"123456789\"),\n",
-        "    hash_account(\"987654321\"),\n",
-        "}\n",
-        "\n",
-        "# Kiểm tra giao dịch\n",
-        "transaction_account = \"123456789\"\n",
-        "result = screening_system(transaction_account, blacklist)\n",
-        "print(result)  # Kết quả: Giao dịch bị chặn"
-      ],
-      "metadata": {
-        "colab": {
-          "base_uri": "https://localhost:8080/"
-        },
-        "id": "Q1rCgBC_Yo3L",
-        "outputId": "2fde7925-da13-450f-e2ef-749b11e597f1"
-      },
-      "execution_count": 21,
-      "outputs": [
-        {
-          "output_type": "stream",
-          "name": "stdout",
-          "text": [
-            "Giao dịch bị chặn\n"
-          ]
-        }
-      ]
-    },
-    {
-      "cell_type": "code",
-      "source": [
-        "import hashlib\n",
-        "\n",
-        "# 1. KHỞI TẠO DỮ LIỆU (Database)\n",
-        "transaction_db = {\n",
-        "    \"GD001\": \"Chuyển tiền 5.000.000 VND\",\n",
-        "    \"GD002\": \"Thanh toán tiền điện\",\n",
-        "    \"GD003\": \"Rút tiền ATM\"\n",
-        "}\n",
-        "# Blacklist chứa mã băm của tội phạm (VD: tài khoản '123456789')\n",
-        "blacklist_db = { hashlib.sha256(\"123456789\".encode()).hexdigest() }\n",
-        "\n",
-        "# 2. CÁC CHỨC NĂNG\n",
-        "def tra_cuu_nhanh():\n",
-        "    ma = input(\"Nhập mã GD: \")\n",
-        "    # Tra cứu O(1)\n",
-        "    print(f\"-> Kết quả: {transaction_db.get(ma, 'Không tìm thấy')}\")\n",
-        "\n",
-        "def kiem_tra_aml():\n",
-        "    tk = input(\"Nhập số TK cần check: \")\n",
-        "    tk_hash = hashlib.sha256(tk.encode()).hexdigest()\n",
-        "\n",
-        "    # Kiểm tra O(1) trong Blacklists\n",
-        "    if tk_hash in blacklist_db:\n",
-        "        print(\"CẢNH BÁO: Tài khoản nằm trong Blacklist -> CHẶN!\")\n",
-        "    else:\n",
-        "        print(\"Tài khoản hợp lệ -> DUYỆT.\")\n",
-        "\n",
-        "# 3. CHƯƠNG TRÌNH CHÍNH\n",
-        "if __name__ == \"__main__\":\n",
-        "    while True:\n",
-        "        print(\"\\n--- CORE BANKING SYSTEM ---\")\n",
-        "        chon = input(\"1. Tra cứu GD | 2. Check AML | 3. Thoát: \")\n",
-        "\n",
-        "        if chon == '1': tra_cuu_nhanh()\n",
-        "        elif chon == '2': kiem_tra_aml()\n",
-        "        elif chon == '3': break"
-      ],
-      "metadata": {
-        "colab": {
-          "base_uri": "https://localhost:8080/"
-        },
-        "id": "_T3fRGr6c8av",
-        "outputId": "681ee631-9a16-4f9a-ad60-398097f7ae67"
-      },
-      "execution_count": 24,
-      "outputs": [
-        {
-          "name": "stdout",
-          "output_type": "stream",
-          "text": [
-            "\n",
-            "--- CORE BANKING SYSTEM ---\n",
-            "1. Tra cứu GD | 2. Check AML | 3. Thoát: 1\n",
-            "Nhập mã GD: GD002\n",
-            "-> Kết quả: Thanh toán tiền điện\n",
-            "\n",
-            "--- CORE BANKING SYSTEM ---\n",
-            "1. Tra cứu GD | 2. Check AML | 3. Thoát: 2\n",
-            "Nhập số TK cần check: 5000000\n",
-            "✅ Tài khoản hợp lệ -> DUYỆT.\n",
-            "\n",
-            "--- CORE BANKING SYSTEM ---\n",
-            "1. Tra cứu GD | 2. Check AML | 3. Thoát: 3\n"
-          ]
-        }
-      ]
-    }
-  ]
-}
+
+if 'blacklist_db' not in st.session_state:
+    # Blacklist chứa mã băm của tài khoản '123456789'
+    st.session_state.blacklist_db = {hash_data("123456789")}
+
+# --- GIAO DIỆN NGƯỜI DÙNG (UI) ---
+st.title("🏦 Hệ thống Core Banking Mini")
+st.markdown("Ứng dụng cấu trúc dữ liệu **Hash Table** trong quản lý giao dịch và bảo mật AML.")
+
+# Chia cột cho giao diện chuyên nghiệp
+tab1, tab2, tab3 = st.tabs(["🔍 Tra cứu GD", "🛡️ Check AML", "📊 Database"])
+
+# --- TAB 1: TRA CỨU NHANH ---
+with tab1:
+    st.header("Tra cứu giao dịch nhanh")
+    ma_gd = st.text_input("Nhập mã giao dịch (VD: GD001, GD002...):")
+    
+    if st.button("Kiểm tra"):
+        # Độ phức tạp O(1) nhờ Hash Table (Dictionary)
+        ket_qua = st.session_state.transaction_db.get(ma_gd)
+        if ket_qua:
+            st.success(f"**Kết quả:** {ket_qua}")
+        else:
+            st.error("Không tìm thấy mã giao dịch này!")
+
+# --- TAB 2: KIỂM TRA AML (Chống rửa tiền) ---
+with tab2:
+    st.header("Hệ thống sàng lọc AML")
+    st.info("Nhập số tài khoản để kiểm tra xem có nằm trong danh sách đen (Blacklist) hay không.")
+    
+    stk = st.text_input("Nhập số tài khoản cần check:")
+    
+    if st.button("Sàng lọc hệ thống"):
+        if stk:
+            stk_hash = hash_data(stk)
+            # Kiểm tra trong Set (Hash Table) với thời gian thực thi cực nhanh
+            if stk_hash in st.session_state.blacklist_db:
+                st.error("🚨 CẢNH BÁO: Tài khoản nằm trong Blacklist -> HÀNH VI BỊ CHẶN!")
+            else:
+                st.success("✅ Tài khoản hợp lệ -> Giao dịch được DUYỆT.")
+        else:
+            st.warning("Vui lòng nhập số tài khoản.")
+
+# --- TAB 3: QUẢN TRỊ ---
+with tab3:
+    st.header("Dữ liệu hệ thống")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("Bảng giao dịch")
+        st.json(st.session_state.transaction_db)
+        
+    with col2:
+        st.subheader("Mã băm Blacklist")
+        st.write("Dữ liệu được lưu dưới dạng băm (SHA-256):")
+        for h in st.session_state.blacklist_db:
+            st.code(h)
+
+# Sidebar hướng dẫn
+st.sidebar.title("Hướng dẫn")
+st.sidebar.info("""
+1. Thử tra cứu: `GD001`
+2. Thử tài khoản vi phạm: `123456789`
+3. Thử tài khoản sạch: `987654321`
+""")
