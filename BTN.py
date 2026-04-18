@@ -89,7 +89,7 @@
       "metadata": {
         "id": "4xhY95j-Qhok"
       },
-      "execution_count": null,
+      "execution_count": None,
       "outputs": []
     },
     {
@@ -111,7 +111,7 @@
         "id": "GHcwQSrrQdaJ",
         "outputId": "72bc8bca-a1ba-4e0b-84fa-1ed4bbe7154c"
       },
-      "execution_count": null,
+      "execution_count": None,
       "outputs": [
         {
           "output_type": "stream",
